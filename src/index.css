@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* DARK (default) - tactical command terminal */
+    --bg: 10 15 13;
+    --bg-elevated: 17 24 21;
+    --bg-sunken: 6 10 8;
+    --panel: 20 28 24;
+    --panel-border: 31 42 36;
+    --panel-hover: 26 36 31;
+    --accent: 92 225 164;
+    --accent-dim: 45 107 79;
+    --warn: 245 165 36;
+    --warn-dim: 122 82 18;
+    --danger: 239 68 68;
+    --danger-dim: 122 34 34;
+    --critical: 220 38 38;
+    --critical-dim: 127 29 29;
+    --info: 96 165 250;
+    --info-dim: 30 58 95;
+    --text: 232 239 233;
+    --text-dim: 138 150 144;
+    --text-faint: 90 102 96;
+    --shadow-inset: 255 255 255;
+
+    /* Map (SVG) tokens */
+    --map-bg: #0c1410;
+    --map-grid: rgba(92, 225, 164, 0.07);
+    --map-grid-major: rgba(92, 225, 164, 0.15);
+    --map-water: rgba(96, 165, 250, 0.08);
+    --map-water-stroke: rgba(96, 165, 250, 0.25);
+    --map-ridge: rgba(245, 165, 36, 0.25);
+    --map-sector-line: rgba(92, 225, 164, 0.08);
+    --map-sector-text: rgba(232, 239, 233, 0.35);
+    --map-entity-text: rgba(232, 239, 233, 0.85);
+    --map-compass: rgba(92, 225, 164, 0.4);
+    --map-compass-text: rgba(92, 225, 164, 0.8);
+    --map-vignette: rgba(0, 0, 0, 0.6);
+    --map-zone-text-bg: rgba(12, 20, 16, 0.85);
+  }
+
+  .theme-light {
+    /* LIGHT - readable command desk */
+    --bg: 244 246 244;
+    --bg-elevated: 255 255 255;
+    --bg-sunken: 230 234 230;
+    --panel: 255 255 255;
+    --panel-border: 212 218 212;
+    --panel-hover: 237 241 237;
+    --accent: 21 128 61;
+    --accent-dim: 134 239 172;
+    --warn: 180 83 9;
+    --warn-dim: 254 215 170;
+    --danger: 185 28 28;
+    --danger-dim: 254 202 202;
+    --critical: 153 27 27;
+    --critical-dim: 252 165 165;
+    --info: 29 78 216;
+    --info-dim: 191 219 254;
+    --text: 26 32 28;
+    --text-dim: 90 102 96;
+    --text-faint: 138 150 144;
+    --shadow-inset: 0 0 0;
+
+    --map-bg: #e8ece8;
+    --map-grid: rgba(21, 128, 61, 0.08);
+    --map-grid-major: rgba(21, 128, 61, 0.16);
+    --map-water: rgba(29, 78, 216, 0.08);
+    --map-water-stroke: rgba(29, 78, 216, 0.35);
+    --map-ridge: rgba(180, 83, 9, 0.35);
+    --map-sector-line: rgba(21, 128, 61, 0.15);
+    --map-sector-text: rgba(26, 32, 28, 0.5);
+    --map-entity-text: rgba(26, 32, 28, 0.9);
+    --map-compass: rgba(21, 128, 61, 0.5);
+    --map-compass-text: rgba(21, 128, 61, 0.9);
+    --map-vignette: rgba(0, 0, 0, 0.1);
+    --map-zone-text-bg: rgba(255, 255, 255, 0.9);
+  }
+
+  html, body, #root {
+    height: 100%;
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+  }
+  body {
+    font-family: 'Heebo', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'ss01' on, 'cv11' on;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--panel-border));
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--accent-dim)); }
+
+  button { font-family: inherit; }
+}
+
+@layer components {
+  .grid-bg {
+    background-image:
+      linear-gradient(rgb(var(--accent) / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--accent) / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .theme-light .grid-bg {
+    background-image:
+      linear-gradient(rgb(var(--accent) / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--accent) / 0.06) 1px, transparent 1px);
+  }
+  .glow-text {
+    text-shadow: 0 0 8px rgb(var(--accent) / 0.4);
+  }
+  .theme-light .glow-text {
+    text-shadow: none;
+  }
+  /* Soften scan-line in light mode to avoid being too aggressive */
+  .theme-light .animate-scan-line {
+    opacity: 0.4;
+  }
+}
