@@ -198,14 +198,19 @@ function TaskRow({ task, agents, onCancel }: { task: Task; agents: any[]; onCanc
   const { dispatch, toast } = useAICommand();
   const agent = agents.find((a) => a.id === task.agentId);
   const Icon = agent ? domainIcon[agent.domain as keyof typeof domainIcon] : Clock;
-  const showOnMap = () => {
+  const showOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!task.geo || !agent) return;
     dispatch({ type: 'SET_MAP_VISIBLE', visible: true });
     dispatch({ type: 'HIGHLIGHT_AGENT', agentId: agent.id });
     toast(`מציג את "${task.geo.label}" במפה`, 'info');
   };
   return (
-    <Card className="hover:border-accent/30 transition-colors">
+    <Card
+      className="hover:border-accent/40 hover:shadow-glow-accent transition-all cursor-pointer"
+      onClick={() => dispatch({ type: 'OPEN_TASK_EDITOR', taskId: task.id })}
+      title="לחץ לפרטים ועריכה"
+    >
       <CardBody className="!p-0">
         <div className="flex items-stretch">
           <div className="w-1 flex-shrink-0" style={{ backgroundColor: task.status === 'failed' ? '#ef4444' : task.status === 'completed' ? '#5ce1a4' : task.status === 'in_progress' ? '#60a5fa' : task.status === 'planned' ? '#f5a524' : '#1f2a24' }} />
@@ -268,7 +273,7 @@ function TaskRow({ task, agents, onCancel }: { task: Task; agents: any[]; onCanc
               )}
             </div>
             {(task.status === 'pending' || task.status === 'in_progress' || task.status === 'planned') && (
-              <Button variant="ghost" size="xs" icon={<Ban size={11} />} onClick={onCancel}>
+              <Button variant="ghost" size="xs" icon={<Ban size={11} />} onClick={(e) => { e.stopPropagation(); onCancel(); }}>
                 בטל
               </Button>
             )}

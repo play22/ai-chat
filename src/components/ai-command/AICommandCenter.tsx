@@ -15,6 +15,7 @@ import { MapAgentLegend } from './map/MapAgentLegend';
 import { MapPickerModal } from './map/MapPickerModal';
 import { TaskDrawer } from './agents/TaskDrawer';
 import { AgentSettingsModal } from './agents/AgentSettingsModal';
+import { TaskDetailsModal } from './tasks/TaskDetailsModal';
 import { ResizeHandle } from './layout/ResizeHandle';
 import { Toasts } from './ui/Toasts';
 
@@ -107,6 +108,7 @@ function Layout() {
       <StatusBar />
       <TaskDrawer />
       {state.agentSettingsId && <AgentSettingsModal />}
+      {state.editingTaskId && <TaskDetailsModal />}
       <MapPickerModal />
       <Toasts />
     </div>

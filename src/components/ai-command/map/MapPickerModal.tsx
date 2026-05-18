@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   rule_area: 'בחר אזור לחוק האוטומציה',
   place_entity: 'בחר מיקום במפה',
   agent_boundary: 'הגדר תיחום אחריות לסוכן',
+  task_geo: 'הגדר אזור פעולה למשימה',
 };
 
 const HINTS: Record<string, string> = {
@@ -18,6 +19,7 @@ const HINTS: Record<string, string> = {
   rule_area: 'לחץ במפה כדי להוסיף נקודות לפוליגון של תחום החוק.',
   place_entity: 'לחץ במפה כדי לבחור מיקום.',
   agent_boundary: 'צייר את האזור בו הסוכן רשאי לפעול אוטונומית. פעולות מחוץ לתיחום ידרשו אישור.',
+  task_geo: 'סמן את האזור בו תבוצע המשימה.',
 };
 
 export function MapPickerModal() {
@@ -26,15 +28,11 @@ export function MapPickerModal() {
   const [point, setPoint] = useState<{ x: number; y: number } | null>(null);
   const [polygon, setPolygon] = useState<{ x: number; y: number }[]>([]);
 
-  // Seed polygon with initial value when picker opens
+  // Seed polygon/point with initial value when picker opens
   useEffect(() => {
-    if (picker?.initialPolygon) {
-      setPolygon(picker.initialPolygon);
-    } else {
-      setPolygon([]);
-    }
-    setPoint(null);
-  }, [picker?.purpose, picker?.agentId, picker?.entityId]);
+    setPolygon(picker?.initialPolygon ?? []);
+    setPoint(picker?.initialPoint ?? null);
+  }, [picker?.purpose, picker?.agentId, picker?.entityId, picker?.taskId]);
 
   if (!picker) return null;
 
@@ -48,7 +46,14 @@ export function MapPickerModal() {
 
   const finalize = () => {
     if (isPlace) {
-      if (!point || !picker.entityId) return;
+      if (!point) return;
+      if (picker.purpose === 'task_geo' && picker.taskId) {
+        dispatch({ type: 'SET_PENDING_TASK_GEO', taskId: picker.taskId, kind: 'point', point });
+        toast('נקודת המשימה עודכנה - לחץ "שמור" בעורך', 'success');
+        dispatch({ type: 'CLOSE_MAP_PICKER' });
+        return;
+      }
+      if (!picker.entityId) return;
       dispatch({ type: 'UPDATE_ENTITY', entityId: picker.entityId, patch: { position: point } });
       toast('מיקום הישות עודכן', 'success');
       dispatch({ type: 'CLOSE_MAP_PICKER' });
@@ -61,6 +66,9 @@ export function MapPickerModal() {
     if (picker.purpose === 'agent_boundary' && picker.agentId) {
       dispatch({ type: 'SET_PENDING_BOUNDARY', agentId: picker.agentId, points: polygon });
       toast('התיחום נקלט - לחץ "שמור שינויים" בהגדרות הסוכן', 'success');
+    } else if (picker.purpose === 'task_geo' && picker.taskId) {
+      dispatch({ type: 'SET_PENDING_TASK_GEO', taskId: picker.taskId, kind: 'area', points: polygon });
+      toast('האזור עודכן - לחץ "שמור" בעורך המשימה', 'success');
     } else if (picker.purpose === 'attach_area') {
       const att: AreaAttachment = {
         kind: 'area',
