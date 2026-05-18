@@ -1,4 +1,5 @@
-import type { Agent, AutonomyLevel, ChatMessage, GeoContext, MessageBlock, Task } from '../state/types';
+import type { Agent, AutomationRule, AutonomyLevel, ChatMessage, GeoContext, MapEntity, MessageBlock, Task } from '../state/types';
+import { generateSummary } from './summaryGenerator';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -7,6 +8,8 @@ interface ResponderInput {
   attachments?: ChatMessage['attachments'];
   agents: Agent[];
   tasks: Task[];
+  rules?: AutomationRule[];
+  entities?: MapEntity[];
   autonomy: AutonomyLevel;
 }
 
@@ -108,19 +111,26 @@ export async function generateAIResponse(input: ResponderInput): Promise<ChatMes
       },
     });
   } else if (/סכם|תקציר|דוח|דו"ח/.test(p)) {
+    const hMatch = p.match(/(\d+)\s*שעות?/);
+    const hours = hMatch ? Math.min(72, Math.max(1, Number(hMatch[1]))) : 6;
     blocks.push({
       kind: 'text',
-      text:
-        'במהלך 6 השעות האחרונות בוצעו 47 פעולות אוטומטיות. 3 חוקי אוטומציה פעלו: ' +
-        '"איתור איום בגזרת צפון" הופעל פעמיים והוקצה לסוכן אש. ' +
-        '"חציית סף תנועה" יצרה התרעה אחת ב-09:42. ' +
-        'מצב כללי תקין, ללא חריגות שמחייבות התערבות מפקדת.',
+      text: `להלן תקציר מובנה של ${hours} השעות האחרונות. הנתונים מאוגדים לפי מטריקות, ציר אירועים, פעילות סוכנים, והמלצות לפעולה.`,
     });
+    blocks.push(
+      generateSummary({
+        hours,
+        agents: input.agents,
+        tasks: input.tasks,
+        rules: input.rules ?? [],
+        entities: input.entities ?? [],
+      }),
+    );
     blocks.push({
       kind: 'quick_actions',
       actions: [
-        { label: 'הצג את האירועים המלאים', prompt: 'הצג טבלת אירועים מ-6 השעות האחרונות' },
-        { label: 'ייצא דו"ח PDF', prompt: 'צור דו"ח PDF של 6 השעות האחרונות' },
+        { label: 'תקציר 12 שעות', prompt: 'סכם את 12 השעות האחרונות' },
+        { label: 'תקציר 24 שעות', prompt: 'סכם את 24 השעות האחרונות' },
         { label: 'השווה לאתמול', prompt: 'השווה את הפעילות לאתמול באותן השעות' },
       ],
     });
