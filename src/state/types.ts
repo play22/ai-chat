@@ -309,13 +309,19 @@ export interface AppState {
   ruleEditorOpen: boolean;
   editingRuleId: string | null;
   mapPickerMode: null | {
-    purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary';
+    purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary' | 'task_geo';
     entityId?: string;
     agentId?: string;
+    taskId?: string;
     initialPolygon?: { x: number; y: number }[];
+    initialPoint?: { x: number; y: number };
   };
   /** Transient: polygon result from picker, consumed by AgentSettingsModal. */
   pendingBoundary: { agentId: string; points: { x: number; y: number }[] } | null;
+  /** Transient: task geo result from picker, consumed by TaskDetailsModal. */
+  pendingTaskGeo: { taskId: string; kind: 'area' | 'point'; points?: { x: number; y: number }[]; point?: { x: number; y: number } } | null;
+  /** ID of the task currently being viewed/edited in TaskDetailsModal. */
+  editingTaskId: string | null;
   toasts: ToastMessage[];
   mapVisible: boolean;
   highlightAgentId: string | null;

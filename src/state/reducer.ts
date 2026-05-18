@@ -38,14 +38,26 @@ export type Action =
   | { type: 'REMOVE_ENTITY'; entityId: string }
   | {
       type: 'OPEN_MAP_PICKER';
-      purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary';
+      purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary' | 'task_geo';
       entityId?: string;
       agentId?: string;
+      taskId?: string;
       initialPolygon?: { x: number; y: number }[];
+      initialPoint?: { x: number; y: number };
     }
   | { type: 'CLOSE_MAP_PICKER' }
   | { type: 'SET_PENDING_BOUNDARY'; agentId: string; points: { x: number; y: number }[] }
   | { type: 'CLEAR_PENDING_BOUNDARY' }
+  | {
+      type: 'SET_PENDING_TASK_GEO';
+      taskId: string;
+      kind: 'area' | 'point';
+      points?: { x: number; y: number }[];
+      point?: { x: number; y: number };
+    }
+  | { type: 'CLEAR_PENDING_TASK_GEO' }
+  | { type: 'OPEN_TASK_EDITOR'; taskId: string }
+  | { type: 'CLOSE_TASK_EDITOR' }
   | { type: 'TOGGLE_MAP_VISIBLE' }
   | { type: 'SET_MAP_VISIBLE'; visible: boolean }
   | { type: 'HIGHLIGHT_AGENT'; agentId: string | null }
@@ -141,7 +153,9 @@ export function reducer(state: AppState, action: Action): AppState {
           purpose: action.purpose,
           entityId: action.entityId,
           agentId: action.agentId,
+          taskId: action.taskId,
           initialPolygon: action.initialPolygon,
+          initialPoint: action.initialPoint,
         },
         mapVisible: true,
       };
@@ -151,6 +165,17 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, pendingBoundary: { agentId: action.agentId, points: action.points } };
     case 'CLEAR_PENDING_BOUNDARY':
       return { ...state, pendingBoundary: null };
+    case 'SET_PENDING_TASK_GEO':
+      return {
+        ...state,
+        pendingTaskGeo: { taskId: action.taskId, kind: action.kind, points: action.points, point: action.point },
+      };
+    case 'CLEAR_PENDING_TASK_GEO':
+      return { ...state, pendingTaskGeo: null };
+    case 'OPEN_TASK_EDITOR':
+      return { ...state, editingTaskId: action.taskId };
+    case 'CLOSE_TASK_EDITOR':
+      return { ...state, editingTaskId: null };
     case 'TOGGLE_MAP_VISIBLE':
       return { ...state, mapVisible: !state.mapVisible };
     case 'SET_MAP_VISIBLE':

@@ -45,7 +45,8 @@ const statusBarColor: Record<TaskStatus, string> = {
 };
 
 export function TimelinePanel() {
-  const { state } = useAICommand();
+  const { state, dispatch } = useAICommand();
+  const openTask = (taskId: string) => dispatch({ type: 'OPEN_TASK_EDITOR', taskId });
   const [zoom, setZoom] = useState<ZoomLevel>('hours-12');
   const [offsetMs, setOffsetMs] = useState(0); // shift window
   const [hovered, setHovered] = useState<Task | null>(null);
@@ -241,8 +242,10 @@ export function TimelinePanel() {
                           key={task.id}
                           onMouseEnter={() => setHovered(task)}
                           onMouseLeave={() => setHovered(null)}
+                          onClick={() => openTask(task.id)}
+                          title="לחץ לפרטים ועריכה"
                           className={clsx(
-                            'absolute top-2.5 h-11 rounded-[4px] border-s-2 px-2 text-start overflow-hidden transition-all hover:z-20 hover:shadow-glow-accent hover:scale-[1.02] origin-center',
+                            'absolute top-2.5 h-11 rounded-[4px] border-s-2 px-2 text-start overflow-hidden transition-all hover:z-20 hover:shadow-glow-accent hover:scale-[1.02] origin-center cursor-pointer',
                             statusBarColor[task.status],
                           )}
                           style={{ insetInlineStart: `${left}%`, width: `${width}%`, minWidth: 32 }}
@@ -283,7 +286,9 @@ export function TimelinePanel() {
                           key={`sub-${task.id}`}
                           onMouseEnter={() => setHovered(task)}
                           onMouseLeave={() => setHovered(null)}
-                          className="absolute bottom-1 h-3 rounded-sm border-s-2 border-dashed opacity-50 hover:opacity-100 transition-opacity overflow-hidden flex items-center px-1"
+                          onClick={() => openTask(task.id)}
+                          title="לחץ לפרטים ועריכה"
+                          className="absolute bottom-1 h-3 rounded-sm border-s-2 border-dashed opacity-50 hover:opacity-100 transition-opacity overflow-hidden flex items-center px-1 cursor-pointer"
                           style={{
                             insetInlineStart: `${left}%`,
                             width: `${width}%`,
