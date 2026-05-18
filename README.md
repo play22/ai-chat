@@ -13,18 +13,57 @@
 ## Quick Start
 
 ```powershell
-# התקנה
+# התקנה (root + server)
 npm install
+npm --prefix server install
 
-# הרצת dev server
+# הרצת dev server (frontend + backend במקביל)
 npm run dev
-# פתח http://localhost:5173
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:3001
 
 # build production
 npm run build
 ```
 
-זמן עד אפליקציה פעילה בדפדפן: **כדקה**. אין צורך ב-API keys, secrets או services חיצוניים.
+זמן עד אפליקציה פעילה בדפדפן: **כדקה**. במצב ברירת מחדל אין צורך ב-API keys — האפליקציה רצה על mock responder.
+
+## Real LLM Mode
+
+האפליקציה תומכת בשני מצבי הפעלה:
+
+### Mock (ברירת מחדל)
+ה-frontend משתמש ב-`generateAIResponse` / `generateAgentResponse` הדטרמיניסטיים מ-`src/mock/`. אין צורך ב-backend, אין עלות, אין תלות חיצונית. מתאים להדגמות וצילומי מסך.
+
+### Real LLM (Backend Proxy)
+תקשורת אמיתית עם LLM דרך שרת Node מקומי. תומך בכל endpoint תואם OpenAI:
+
+```powershell
+# 1. הגדר את ה-LLM provider
+cp server/.env.example server/.env
+# ערוך את server/.env עם:
+#   LLM_BASE_URL=https://api.openai.com/v1   (או OpenRouter, Ollama, vLLM...)
+#   LLM_API_KEY=sk-...
+#   LLM_MODEL=gpt-4o-mini
+
+# 2. הפעל את ה-frontend ב-real mode
+cp .env.example .env
+# ב-.env שנה: VITE_USE_REAL_LLM=true
+
+# 3. הרץ
+npm run dev
+```
+
+**ספקים נתמכים** (כל אחד עם base URL מתאים):
+- **OpenAI**: `https://api.openai.com/v1`
+- **OpenRouter** (גישה ל-Claude/Gemini/Llama): `https://openrouter.ai/api/v1`
+- **Ollama** מקומי: `http://localhost:11434/v1`
+- **vLLM / LM-Studio**: `http://localhost:8000/v1`
+- כל endpoint תואם OpenAI Chat Completions API
+
+**איך זה עובד**: ה-backend חושף `POST /api/chat` ו-`POST /api/agent-chat` שמחזירים SSE stream. ה-LLM מקבל system prompt עם snapshot של המצב + 7 tools (אחד לכל סוג message block). הוא מחויב לפלוט רק tool calls שמתורגמים לבלוקים בפרונט.
+
+**Fallback אוטומטי**: אם ה-backend לא מגיב, ה-frontend חוזר אוטומטית ל-mock עם toast אזהרה.
 
 ## Tech Stack
 

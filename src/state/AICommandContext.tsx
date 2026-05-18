@@ -9,6 +9,7 @@ import { initialEntities } from '../mock/entities';
 import { initialConversations } from '../mock/conversations';
 import { generateAIResponse } from '../mock/aiResponder';
 import { generateAgentResponse } from '../mock/agentResponder';
+import { isRealLLMEnabled, streamMainChat, streamAgentChat } from '../services/llmClient';
 
 const initialState: AppState = {
   activeTab: 'chat',
@@ -109,6 +110,42 @@ export function AICommandProvider({ children }: { children: ReactNode }) {
       },
     });
 
+    // Try real LLM if enabled; otherwise (or on failure) fall back to mock
+    if (isRealLLMEnabled()) {
+      const accumulated: import('./types').MessageBlock[] = [];
+      let failed = false;
+      await streamMainChat(
+        {
+          prompt: text,
+          agents: s.agents,
+          tasks: s.tasks,
+          rules: s.rules,
+          entities: s.entities,
+          autonomy: s.globalAutonomy,
+        },
+        {
+          onBlock: (block) => {
+            accumulated.push(block);
+            dispatch({
+              type: 'UPDATE_MESSAGE',
+              messageId: pendingId,
+              patch: { pending: false, blocks: [...accumulated] },
+            });
+          },
+          onDone: () => {
+            dispatch({ type: 'UPDATE_MESSAGE', messageId: pendingId, patch: { pending: false } });
+          },
+          onError: (err) => {
+            failed = true;
+            console.error('[llm] stream failed:', err);
+            toast(`AI אמיתי לא זמין — חוזר ל-mock (${err.message})`, 'warn');
+          },
+        },
+      );
+      if (!failed) return;
+    }
+
+    // Mock fallback (or default path when real LLM disabled)
     const response = await generateAIResponse({
       prompt: text,
       attachments,
@@ -118,7 +155,6 @@ export function AICommandProvider({ children }: { children: ReactNode }) {
       entities: s.entities,
       autonomy: s.globalAutonomy,
     });
-
     dispatch({ type: 'REMOVE_MESSAGE', messageId: pendingId });
     dispatch({ type: 'ADD_MESSAGE', message: response });
   };
@@ -165,6 +201,39 @@ export function AICommandProvider({ children }: { children: ReactNode }) {
     const agentTasks = s.tasks.filter(
       (t) => t.agentId === agentId || (t.subAgentIds ?? []).includes(agentId),
     );
+
+    if (isRealLLMEnabled()) {
+      const accumulated: import('./types').MessageBlock[] = [];
+      let failed = false;
+      await streamAgentChat(
+        { prompt: text, agent, tasks: agentTasks },
+        {
+          onBlock: (block) => {
+            accumulated.push(block);
+            dispatch({
+              type: 'UPDATE_AGENT_MESSAGE',
+              agentId,
+              messageId: pendingId,
+              patch: { pending: false, blocks: [...accumulated] },
+            });
+          },
+          onDone: () => {
+            dispatch({
+              type: 'UPDATE_AGENT_MESSAGE',
+              agentId,
+              messageId: pendingId,
+              patch: { pending: false },
+            });
+          },
+          onError: (err) => {
+            failed = true;
+            console.error('[llm] agent stream failed:', err);
+            toast(`AI אמיתי לא זמין — חוזר ל-mock (${err.message})`, 'warn');
+          },
+        },
+      );
+      if (!failed) return;
+    }
 
     const response = await generateAgentResponse({ prompt: text, agent, tasks: agentTasks });
     dispatch({ type: 'REMOVE_AGENT_MESSAGE', agentId, messageId: pendingId });
