@@ -201,6 +201,47 @@ export interface QuickActionsBlock {
   kind: 'quick_actions';
   actions: { label: string; prompt: string }[];
 }
+
+export type SummaryEventSeverity = 'info' | 'success' | 'warn' | 'critical';
+
+export interface SummaryMetric {
+  key: string;
+  label: string;
+  value: number | string;
+  unit?: string;
+  delta?: { direction: 'up' | 'down' | 'flat'; pct?: number; vsLabel: string };
+  tone?: 'neutral' | 'success' | 'warn' | 'danger' | 'info';
+}
+
+export interface SummaryEvent {
+  id: string;
+  timestamp: string;
+  title: string;
+  description?: string;
+  agentId?: string;
+  severity: SummaryEventSeverity;
+}
+
+export interface SummaryAgentActivity {
+  agentId: string;
+  tasksCompleted: number;
+  tasksFailed: number;
+  tasksInProgress: number;
+  alertsHandled: number;
+}
+
+export interface SummaryBlock {
+  kind: 'summary';
+  title: string;
+  periodLabel: string;       // e.g. "16:00 - 22:00" or "6 שעות אחרונות"
+  rangeStart: string;        // ISO
+  rangeEnd: string;          // ISO
+  metrics: SummaryMetric[];
+  events: SummaryEvent[];
+  agentActivity: SummaryAgentActivity[];
+  highlights: string[];
+  recommendations?: string[];
+}
 export interface PlanStep {
   id: string;
   title: string;
@@ -225,7 +266,8 @@ export type MessageBlock =
   | ActionCardBlock
   | EntitySuggestionBlock
   | QuickActionsBlock
-  | PlanProposalBlock;
+  | PlanProposalBlock
+  | SummaryBlock;
 
 export interface ChatMessage {
   id: string;

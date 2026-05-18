@@ -34,9 +34,9 @@ const initialState: AppState = {
         {
           kind: 'quick_actions',
           actions: [
+            { label: 'תקציר 6 שעות אחרונות', prompt: 'סכם את 6 השעות האחרונות' },
             { label: 'תכנן אש לצפון-מערב בשעה 15:00', prompt: 'תכנן הפעלת משימת אש לגזרת צפון-מערב בשעה 15:00' },
             { label: 'תקיפה משולבת אש+אוויר+מודיעין', prompt: 'תכנן תקיפה משולבת של אש, אוויר ומודיעין בגזרה צפון-מזרחית בשעה 16:00' },
-            { label: 'הפק דו"ח מודיעין', prompt: 'תכנן הפקת דו"ח מודיעין מעודכן בעוד 30 דקות' },
             { label: 'שגר כט"ב לצפון-מזרח', prompt: 'תכנן שיגור כט"ב לסיור בגזרה הצפון-מזרחית בשעה 14:30' },
             { label: 'מצב סוכנים', prompt: 'מה סטטוס הסוכנים כעת?' },
             { label: 'איומים פעילים', prompt: 'הצג איומים פעילים בשטח' },
@@ -112,6 +112,8 @@ export function AICommandProvider({ children }: { children: ReactNode }) {
       attachments,
       agents: s.agents,
       tasks: s.tasks,
+      rules: s.rules,
+      entities: s.entities,
       autonomy: s.globalAutonomy,
     });
 

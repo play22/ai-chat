@@ -7,6 +7,7 @@ import { ActionCardRenderer } from './MessageRenderers/ActionCard';
 import { EntitySuggestionRenderer } from './MessageRenderers/EntitySuggestion';
 import { QuickActionsRenderer } from './MessageRenderers/QuickActions';
 import { PlanProposalRenderer } from './MessageRenderers/PlanProposal';
+import { SummaryRenderer } from './MessageRenderers/Summary';
 import { Badge } from '../ui/Badge';
 import { autonomyLabel, autonomyTone, formatTime } from '../shared';
 
@@ -72,6 +73,7 @@ export function Message({ message }: { message: ChatMessage }) {
                 if (block.kind === 'entity_suggestion') return <EntitySuggestionRenderer key={i} block={block} />;
                 if (block.kind === 'quick_actions') return <QuickActionsRenderer key={i} block={block} />;
                 if (block.kind === 'plan_proposal') return <PlanProposalRenderer key={i} block={block} />;
+                if (block.kind === 'summary') return <SummaryRenderer key={i} block={block} />;
                 return null;
               })}
           </div>
