@@ -43,6 +43,25 @@ export function AgentSettingsModal() {
     }
   }, [agent?.id]);
 
+  // Pick up polygon from MapPickerModal when it finishes
+  useEffect(() => {
+    if (!agent || !state.pendingBoundary) return;
+    if (state.pendingBoundary.agentId !== agent.id) return;
+    setDraft((d) => {
+      if (!d) return d;
+      return {
+        ...d,
+        boundary: {
+          label: d.boundary?.label ?? `תיחום אחריות · ${agent.name}`,
+          kind: 'area',
+          area: state.pendingBoundary!.points,
+        },
+      };
+    });
+    setDirty(true);
+    dispatch({ type: 'CLEAR_PENDING_BOUNDARY' });
+  }, [state.pendingBoundary, agent, dispatch]);
+
   if (!agent || !draft) return null;
 
   const Icon = domainIcon[agent.domain];
@@ -125,7 +144,7 @@ export function AgentSettingsModal() {
           {tab === 'style' && <StyleTab draft={draft} update={updateDraft} />}
           {tab === 'permissions' && <PermissionsTab draft={draft} update={updateDraft} />}
           {tab === 'units' && <UnitsTab draft={draft} update={updateDraft} />}
-          {tab === 'boundary' && <BoundaryTab draft={draft} update={updateDraft} agentDomain={agent.domain} />}
+          {tab === 'boundary' && <BoundaryTab draft={draft} update={updateDraft} agentDomain={agent.domain} agentId={agent.id} />}
           {tab === 'tools' && <ToolsTab draft={draft} update={updateDraft} />}
         </section>
       </div>
@@ -447,7 +466,18 @@ function UnitsTab({ draft, update }: { draft: AgentConfig; update: (p: Partial<A
   );
 }
 
-function BoundaryTab({ draft, update, agentDomain }: { draft: AgentConfig; update: (p: Partial<AgentConfig>) => void; agentDomain: string }) {
+function BoundaryTab({ draft, update, agentDomain, agentId }: { draft: AgentConfig; update: (p: Partial<AgentConfig>) => void; agentDomain: string; agentId: string }) {
+  const { dispatch } = useAICommand();
+
+  const openPicker = (initial?: { x: number; y: number }[]) => {
+    dispatch({
+      type: 'OPEN_MAP_PICKER',
+      purpose: 'agent_boundary',
+      agentId,
+      initialPolygon: initial,
+    });
+  };
+
   return (
     <>
       <SectionTitle
@@ -456,7 +486,7 @@ function BoundaryTab({ draft, update, agentDomain }: { draft: AgentConfig; updat
         icon={<MapPin size={16} />}
       />
 
-      <div className="grid grid-cols-[1fr_300px] gap-4">
+      <div className="grid grid-cols-[1fr_320px] gap-4">
         <div className="flex flex-col gap-3">
           {draft.boundary ? (
             <>
@@ -465,32 +495,33 @@ function BoundaryTab({ draft, update, agentDomain }: { draft: AgentConfig; updat
                 value={draft.boundary.label}
                 onChange={(e) => update({ boundary: { ...draft.boundary!, label: e.target.value } })}
               />
-              <div className="bg-bg-elevated border border-panel-border rounded-[6px] p-3">
-                <div className="text-2xs text-text-faint uppercase tracking-wider mb-1.5">סוג תיחום</div>
-                <div className="text-sm text-text">
-                  {draft.boundary.kind === 'area' ? 'פוליגון' : 'נקודה'}
-                  {draft.boundary.kind === 'area' && draft.boundary.area && (
-                    <span className="text-2xs text-text-faint ms-2 font-mono">
-                      {draft.boundary.area.length} נקודות
-                    </span>
-                  )}
+              <div className="bg-bg-elevated border border-panel-border rounded-[6px] p-3 flex items-center justify-between">
+                <div>
+                  <div className="text-2xs text-text-faint uppercase tracking-wider mb-1">סוג תיחום</div>
+                  <div className="text-sm text-text">
+                    {draft.boundary.kind === 'area' ? 'פוליגון' : 'נקודה'}
+                    {draft.boundary.kind === 'area' && draft.boundary.area && (
+                      <span className="text-2xs text-text-faint ms-2 font-mono">
+                        {draft.boundary.area.length} נקודות
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {draft.boundary.kind === 'area' && (
+                  <div className="text-end">
+                    <div className="text-2xs text-text-faint uppercase tracking-wider mb-1">שטח משוער</div>
+                    <div className="text-sm font-mono text-accent">
+                      {draft.boundary.area ? `${polygonArea(draft.boundary.area).toFixed(1)}%` : '—'}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Button
-                  variant="outline"
+                  variant="primary"
                   size="sm"
                   icon={<MapPin size={13} />}
-                  onClick={() => {
-                    // For demo: shift area randomly to show change
-                    if (!draft.boundary?.area) return;
-                    update({
-                      boundary: {
-                        ...draft.boundary,
-                        area: draft.boundary.area.map((p) => ({ x: p.x + (Math.random() * 4 - 2), y: p.y + (Math.random() * 4 - 2) })),
-                      },
-                    });
-                  }}
+                  onClick={() => openPicker(draft.boundary?.kind === 'area' ? draft.boundary.area : undefined)}
                 >
                   ערוך תיחום במפה
                 </Button>
@@ -504,45 +535,75 @@ function BoundaryTab({ draft, update, agentDomain }: { draft: AgentConfig; updat
                   הסר תיחום
                 </Button>
               </div>
+              <div className="text-2xs text-text-faint bg-info/5 border border-info/20 rounded p-2.5 leading-relaxed">
+                💡 לחץ "ערוך תיחום במפה" כדי לפתוח את המפה המלאה. תוכל לסמן נקודות חדשות, לבטל נקודה אחרונה, או לאפס ולהתחיל מחדש. התיחום הקיים נטען כנקודת מוצא.
+              </div>
             </>
           ) : (
             <div className="bg-bg-sunken border border-dashed border-panel-border rounded-[6px] p-6 text-center flex flex-col items-center gap-3">
               <Unlock size={24} className="text-text-faint" />
               <div className="text-sm text-text">לא הוגדר תיחום</div>
-              <div className="text-2xs text-text-faint leading-relaxed max-w-[260px]">
-                הסוכן רשאי לפעול בכל המרחב. הוסף תיחום כדי להגביל אותו לאזור ספציפי.
+              <div className="text-2xs text-text-faint leading-relaxed max-w-[280px]">
+                הסוכן רשאי לפעול בכל המרחב. הגדר תיחום כדי להגביל אותו לאזור ספציפי — פעולות מחוץ לתיחום ידרשו אישור מפקדתי.
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Plus size={13} />}
-                onClick={() =>
-                  update({
-                    boundary: {
-                      label: 'תיחום חדש',
-                      kind: 'area',
-                      area: [{ x: 30, y: 30 }, { x: 70, y: 30 }, { x: 70, y: 70 }, { x: 30, y: 70 }],
-                    },
-                  })
-                }
-              >
-                הוסף תיחום
-              </Button>
+              <div className="flex flex-col gap-2 w-full max-w-[260px]">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<MapPin size={13} />}
+                  onClick={() => openPicker()}
+                >
+                  סמן תיחום במפה
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Plus size={13} />}
+                  onClick={() =>
+                    update({
+                      boundary: {
+                        label: 'תיחום חדש',
+                        kind: 'area',
+                        area: [{ x: 30, y: 30 }, { x: 70, y: 30 }, { x: 70, y: 70 }, { x: 30, y: 70 }],
+                      },
+                    })
+                  }
+                >
+                  או הוסף מלבן ברירת מחדל
+                </Button>
+              </div>
             </div>
           )}
         </div>
-        <div>
-          <div className="text-2xs text-text-faint uppercase tracking-wider mb-1.5">תצוגת מפה</div>
+        <div className="flex flex-col gap-2">
+          <div className="text-2xs text-text-faint uppercase tracking-wider">תצוגת מפה מקדימה</div>
           <MockMap
-            height={240}
+            height={260}
             miniature
             showControls={false}
             previewGeo={draft.boundary ? { geo: draft.boundary, agentDomain } : null}
           />
+          {draft.boundary?.kind === 'area' && draft.boundary.area && (
+            <div className="text-2xs text-text-faint text-center font-mono">
+              גבולות: X[{Math.min(...draft.boundary.area.map((p) => p.x)).toFixed(0)}-{Math.max(...draft.boundary.area.map((p) => p.x)).toFixed(0)}] · Y[{Math.min(...draft.boundary.area.map((p) => p.y)).toFixed(0)}-{Math.max(...draft.boundary.area.map((p) => p.y)).toFixed(0)}]
+            </div>
+          )}
         </div>
       </div>
     </>
   );
+}
+
+/** Shoelace formula - returns area in % units of the 0-100 viewBox (so out of 10000). */
+function polygonArea(points: { x: number; y: number }[]): number {
+  if (points.length < 3) return 0;
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    sum += a.x * b.y - b.x * a.y;
+  }
+  return Math.abs(sum) / 200; // divided by 2 then converted to percent of 10000
 }
 
 function ToolsTab({ draft, update }: { draft: AgentConfig; update: (p: Partial<AgentConfig>) => void }) {

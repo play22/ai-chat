@@ -1,4 +1,4 @@
-import { Zap, ArrowLeft, Pencil, Trash2, Activity } from 'lucide-react';
+import { Zap, ArrowLeft, Pencil, Trash2, Activity, MessageSquareText } from 'lucide-react';
 import type { AutomationRule } from '../../../state/types';
 import { Card, CardBody } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -49,6 +49,11 @@ export function RuleCard({ rule }: { rule: AutomationRule }) {
             }}
           />
           <h3 className="text-sm font-semibold text-text flex-1 min-w-0 truncate">{rule.name}</h3>
+          {rule.nlDescription && (
+            <Badge tone="info" className="!gap-1">
+              <MessageSquareText size={9} /> שפה חופשית
+            </Badge>
+          )}
           {rule.enabled ? (
             <Badge tone="success" dot pulse>
               פעיל
@@ -57,6 +62,11 @@ export function RuleCard({ rule }: { rule: AutomationRule }) {
             <Badge tone="neutral">מושבת</Badge>
           )}
         </div>
+        {rule.nlDescription && (
+          <div className="px-4 py-2 bg-info/5 border-b border-panel-border text-xs text-text-dim leading-relaxed italic">
+            "{rule.nlDescription}"
+          </div>
+        )}
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-3.5 bg-bg-elevated/30">
           <div>

@@ -36,8 +36,16 @@ export type Action =
   | { type: 'ADD_ENTITY'; entity: MapEntity }
   | { type: 'UPDATE_ENTITY'; entityId: string; patch: Partial<MapEntity> }
   | { type: 'REMOVE_ENTITY'; entityId: string }
-  | { type: 'OPEN_MAP_PICKER'; purpose: 'attach_area' | 'place_entity' | 'rule_area'; entityId?: string }
+  | {
+      type: 'OPEN_MAP_PICKER';
+      purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary';
+      entityId?: string;
+      agentId?: string;
+      initialPolygon?: { x: number; y: number }[];
+    }
   | { type: 'CLOSE_MAP_PICKER' }
+  | { type: 'SET_PENDING_BOUNDARY'; agentId: string; points: { x: number; y: number }[] }
+  | { type: 'CLEAR_PENDING_BOUNDARY' }
   | { type: 'TOGGLE_MAP_VISIBLE' }
   | { type: 'SET_MAP_VISIBLE'; visible: boolean }
   | { type: 'HIGHLIGHT_AGENT'; agentId: string | null }
@@ -127,9 +135,22 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'REMOVE_ENTITY':
       return { ...state, entities: state.entities.filter((e) => e.id !== action.entityId) };
     case 'OPEN_MAP_PICKER':
-      return { ...state, mapPickerMode: { purpose: action.purpose, entityId: action.entityId }, mapVisible: true };
+      return {
+        ...state,
+        mapPickerMode: {
+          purpose: action.purpose,
+          entityId: action.entityId,
+          agentId: action.agentId,
+          initialPolygon: action.initialPolygon,
+        },
+        mapVisible: true,
+      };
     case 'CLOSE_MAP_PICKER':
       return { ...state, mapPickerMode: null };
+    case 'SET_PENDING_BOUNDARY':
+      return { ...state, pendingBoundary: { agentId: action.agentId, points: action.points } };
+    case 'CLEAR_PENDING_BOUNDARY':
+      return { ...state, pendingBoundary: null };
     case 'TOGGLE_MAP_VISIBLE':
       return { ...state, mapVisible: !state.mapVisible };
     case 'SET_MAP_VISIBLE':
