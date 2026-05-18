@@ -58,6 +58,7 @@ const initialState: AppState = {
   agentSettingsId: null,
   mapSplitPercent: 45,
   agentChats: {},
+  pendingBoundary: null,
 };
 
 interface ContextValue {

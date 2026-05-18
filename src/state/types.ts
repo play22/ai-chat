@@ -138,6 +138,8 @@ export interface AutomationRule {
   enabled: boolean;
   trigger: AutomationTrigger;
   action: AutomationAction;
+  /** Optional natural-language description that was used to create/edit this rule. */
+  nlDescription?: string;
   lastFired?: string;
   firedCount: number;
 }
@@ -264,7 +266,14 @@ export interface AppState {
   selectedAgentId: string | null;
   ruleEditorOpen: boolean;
   editingRuleId: string | null;
-  mapPickerMode: null | { purpose: 'attach_area' | 'place_entity' | 'rule_area'; entityId?: string };
+  mapPickerMode: null | {
+    purpose: 'attach_area' | 'place_entity' | 'rule_area' | 'agent_boundary';
+    entityId?: string;
+    agentId?: string;
+    initialPolygon?: { x: number; y: number }[];
+  };
+  /** Transient: polygon result from picker, consumed by AgentSettingsModal. */
+  pendingBoundary: { agentId: string; points: { x: number; y: number }[] } | null;
   toasts: ToastMessage[];
   mapVisible: boolean;
   highlightAgentId: string | null;

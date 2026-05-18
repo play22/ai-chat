@@ -105,9 +105,9 @@ function Layout() {
         </main>
       </div>
       <StatusBar />
-      <MapPickerModal />
       <TaskDrawer />
       {state.agentSettingsId && <AgentSettingsModal />}
+      <MapPickerModal />
       <Toasts />
     </div>
   );
