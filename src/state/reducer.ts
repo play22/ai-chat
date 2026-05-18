@@ -67,6 +67,7 @@ export type Action =
   | { type: 'UPDATE_AGENT_CONFIG'; agentId: string; config: import('./types').AgentConfig }
   | { type: 'SET_MAP_SPLIT'; percent: number }
   | { type: 'ADD_AGENT_MESSAGE'; agentId: string; message: ChatMessage }
+  | { type: 'UPDATE_AGENT_MESSAGE'; agentId: string; messageId: string; patch: Partial<ChatMessage> }
   | { type: 'REMOVE_AGENT_MESSAGE'; agentId: string; messageId: string }
   | { type: 'CLEAR_AGENT_MESSAGES'; agentId: string }
   | { type: 'UPDATE_TASK'; taskId: string; patch: Partial<Task> }
@@ -202,6 +203,16 @@ export function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         agentChats: { ...state.agentChats, [action.agentId]: [...existing, action.message] },
+      };
+    }
+    case 'UPDATE_AGENT_MESSAGE': {
+      const existing = state.agentChats[action.agentId] ?? [];
+      return {
+        ...state,
+        agentChats: {
+          ...state.agentChats,
+          [action.agentId]: existing.map((m) => (m.id === action.messageId ? { ...m, ...action.patch } : m)),
+        },
       };
     }
     case 'REMOVE_AGENT_MESSAGE': {
