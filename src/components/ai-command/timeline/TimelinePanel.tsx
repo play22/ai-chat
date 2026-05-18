@@ -287,7 +287,7 @@ export function TimelinePanel() {
                           onMouseEnter={() => setHovered(task)}
                           onMouseLeave={() => setHovered(null)}
                           onClick={() => openTask(task.id)}
-                          title="לחץ לפרטים ועריכה"
+                          title={`תת-משימה תחת ${coord?.name ?? ''} · ${task.title} · לחץ לפרטים`}
                           className="absolute bottom-1 h-3 rounded-sm border-s-2 border-dashed opacity-50 hover:opacity-100 transition-opacity overflow-hidden flex items-center px-1 cursor-pointer"
                           style={{
                             insetInlineStart: `${left}%`,
@@ -296,7 +296,6 @@ export function TimelinePanel() {
                             backgroundColor: 'rgb(var(--panel) / 0.5)',
                             borderInlineStartColor: coord ? `var(--map-bg)` : 'currentColor',
                           }}
-                          title={`תת-משימה תחת ${coord?.name ?? ''} · ${task.title}`}
                         >
                           <span className="text-[8px] font-mono text-text-dim truncate">
                             ↳ {coord?.name.replace('סוכן ', '')} · {task.title}
